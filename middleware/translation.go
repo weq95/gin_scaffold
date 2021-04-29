@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"github.com/e421083458/gin_scaffold/public"
 	"github.com/gin-gonic/gin"
+	"github.com/gin_scaffiold/public"
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"
 	"github.com/go-playground/universal-translator"
@@ -57,6 +57,19 @@ func TranslationMiddleware() gin.HandlerFunc {
 				t, _ := ut.T("is-validuser", fe.Field())
 				return t
 			})
+
+			_ = val.RegisterValidation("valid_username", func(fl validator.FieldLevel) bool {
+				return fl.Field().String() == "admin"
+			})
+
+			_ = val.RegisterTranslation("valid_username", trans, func(ut ut.Translator) error {
+				return ut.Add("valid_username", "{0} 填写不正确", true)
+			}, func(ut ut.Translator, fe validator.FieldError) string {
+				t, _ := ut.T("valid_username", fe.Field())
+
+				return t
+			})
+
 			break
 		}
 		c.Set(public.TranslatorKey, trans)

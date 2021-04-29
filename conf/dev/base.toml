@@ -14,6 +14,10 @@
         "192.168.1.1"
     ]
 
+[session]
+    redis_server = "127.0.0.1:6379"   #redis session server
+    redis_password = ""
+
 [log]
     log_level = "trace"         #日志打印最低级别
     [log.file_writer]           #文件写入配置

@@ -33,7 +33,7 @@ func GetConfEnv() string {
 }
 
 func GetConfPath(filename string) string {
-	return ConfEnvPath + "/" + ".toml" //解析后缀名为 .toml的文件
+	return ConfEnvPath + "/" + filename + ".toml" //解析后缀名为 .toml的文件
 }
 
 func GetConfFilePath(fileName string) string {
@@ -67,7 +67,7 @@ func ParseConfig(path string, conf interface{}) error {
 	v.SetConfigType("toml") //解析文件类型
 	_ = v.ReadConfig(bytes.NewBuffer(data))
 
-	if err := v.Unmarshal(conf); err != nil {
+	if err = v.Unmarshal(conf); err != nil {
 		return fmt.Errorf("Parse config fail, config:%v, err:%v", string(data), err)
 	}
 

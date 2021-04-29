@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/e421083458/gorm"
+	_ "github.com/go-sql-driver/mysql"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -21,10 +22,10 @@ type MysqlGormLogger struct {
 
 func InitDBPool(path string) error {
 	//普通的db方式
-	DbConfMap := MysqlMapConf{}
+	DbConfMap := &MysqlMapConf{}
 	err := ParseConfig(path, DbConfMap)
 	if err != nil {
-		return err
+		return errors.New("文件解析失败:err=" + err.Error())
 	}
 
 	if len(DbConfMap.List) == 0 {

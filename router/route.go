@@ -1,11 +1,15 @@
 package router
 
 import (
-	"github.com/gin_scaffiold/docs"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin_scaffiold/common/lib"
+	"github.com/gin_scaffiold/controller"
+	"github.com/gin_scaffiold/docs"
+	"github.com/gin_scaffiold/middleware"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
+	"log"
 )
 
 // @title Swagger Example API
@@ -71,6 +75,23 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	})
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	adminLogin := router.Group("/admin_login")
+	//session 使用redis驱动
+	store, err := sessions.NewRedisStore(10, "tcp",
+		lib.GetStringConf("base.session.redis_server"),
+		lib.GetStringConf("base.session.redis_password"),
+		[]byte("secret"))
+	if err != nil {
+		log.Fatalf("sessions.NewRedisStore err:%v", err)
+	}
+	adminLogin.Use(
+		sessions.Sessions("mysession", store),
+		middleware.RecoveryMiddleware(),
+		middleware.RequestLog(),
+		middleware.TranslationMiddleware())
+	{
+		controller.AdminLoginRegister(adminLogin)
+	}
 
 	return router
 }
