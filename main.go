@@ -1,16 +1,24 @@
 package main
 
 import (
-	"github.com/e421083458/gin_scaffold/router"
-	"github.com/e421083458/golang_common/lib"
+	"flag"
+	"github.com/gin_scaffiold/common/lib"
+	"github.com/gin_scaffiold/router"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-func main()  {
-	lib.InitModule("./conf/dev/",[]string{"base","mysql","redis",})
+var (
+	endpoint = flag.String("endpoint", "", "input endpoint dashboard or server")
+	config   = flag.String("config", "", "input config file like ./conf/dev/")
+)
+
+func main() {
+	lib.InitModule("./conf/dev/")
+
 	defer lib.Destroy()
+
 	router.HttpServerRun()
 
 	quit := make(chan os.Signal)

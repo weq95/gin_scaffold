@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"github.com/e421083458/gorm"
-	"github.com/gin_scaffiold/gin_scaffold/common/log"
+	"github.com/gin_scaffiold/common/log"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
