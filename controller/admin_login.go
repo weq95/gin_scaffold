@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/gin_scaffiold/common/lib"
 	"github.com/gin_scaffiold/dao"
 	"github.com/gin_scaffiold/dto"
 	"github.com/gin_scaffiold/middleware"
@@ -40,14 +39,11 @@ func (a *AdminController) AdminLogin(ctx *gin.Context) {
 		return
 	}
 
-	db, err := lib.GetGormPool("default")
-	if err != nil {
-		middleware.ResponseError(ctx, 2001, err)
-		return
-	}
 
-	admin := &dao.Admin{}
-	admin, err = admin.LoginCheck(ctx, db, params)
+	admin := &dao.Admin{
+		UserName: params.UserName,
+	}
+	admin, err := admin.LoginCheck(params)
 	if err != nil {
 		middleware.ResponseError(ctx, 2002, err)
 		return

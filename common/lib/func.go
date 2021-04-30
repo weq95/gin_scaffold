@@ -72,9 +72,7 @@ func initModule(configPath string, modules []string) error {
 
 	//加载mysql配置
 	if InArrayString("mysql", modules) {
-		if err := InitDBPool(GetConfPath("mysql_map")); err != nil {
-			fmt.Printf("[ERROR] %s%s\n", time.Now().Format(TimeFormat), " InitDBPool:"+err.Error())
-		}
+		GetMysql()
 	}
 
 	//设置时区
@@ -137,7 +135,7 @@ func Substr(str string, start int64, end int64) string {
 func Destroy() {
 	log.Println("------------------------------------------------------------------------")
 	log.Printf("[INFO] %s\n", " start destroy resources.")
-	CloseDB()
+
 	log2.Close()
 	log.Printf("[INFO] %s\n", " success destroy resources.")
 }

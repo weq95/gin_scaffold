@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/e421083458/gorm"
 	"github.com/gin-gonic/gin"
+	"github.com/gin_scaffiold/common/lib"
 	"github.com/gin_scaffiold/dto"
 	"github.com/gin_scaffiold/public"
 	"time"
@@ -23,36 +24,20 @@ func (a *Admin) TableName() string {
 	return "gateway_admin"
 }
 
-func (a *Admin) LoginCheck(ctx *gin.Context, db *gorm.DB, input *dto.AdminLoginInput) (*Admin, error) {
-	admin, err := a.Find(ctx, db,
-		&Admin{
-			UserName: input.UserName,
-			IsDelete: 0,
-		})
+func (a *Admin) LoginCheck(input *dto.AdminLoginInput) (*Admin, error) {
+	lib.DBMySQL.Debug().Where("user_name = ?", a.UserName).First(a)
 
-	if err != nil {
+
+	if a.Id <= 0 {
 		return nil, errors.New("用户信息不存在")
 	}
 
-	saltPwd := public.GenSaltPassword(admin.Salt, input.Password)
-	if admin.Password != saltPwd {
+	saltPwd := public.GenSaltPassword(a.Salt, input.Password)
+	if a.Password != saltPwd {
 		return nil, errors.New("用户名或密码错误")
 	}
 
-	return admin, nil
-}
-
-func (a *Admin) Find(ctx *gin.Context, db *gorm.DB, search *Admin) (*Admin, error) {
-	out := &Admin{}
-
-	err := db.SetCtx(public.GetGinTraceContext(ctx)).
-		Where(search).Find(out).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return a, nil
 }
 
 func (a *Admin) Save(ctx *gin.Context, db *gorm.DB) error {
