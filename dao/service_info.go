@@ -38,7 +38,7 @@ func (m *ServiceInfo) PageList(input *dto.ServiceListInput) ([]*ServiceInfo, int
 	}
 
 	query.Count(&total)
-	query.Limit(input.PageSize).Offset((input.PageNo - 1) * input.PageSize).Find(&list)
+	query.Limit(input.PageSize).Offset((input.PageNo - 1) * input.PageSize).Order("id DESC").Find(&list)
 
 	return list, total
 }
@@ -112,4 +112,12 @@ func (m *ServiceInfo) Detail(search *ServiceInfo) *ServiceDetail {
 
 func (m *ServiceInfo) Save() {
 	lib.DBMySQL.Save(m)
+}
+
+func (m *ServiceInfo) Update() {
+	lib.DBMySQL.Debug().Model(m).Updates(*m)
+}
+
+func (m *ServiceInfo) Delete() {
+	lib.DBMySQL.Delete(m)
 }

@@ -17,7 +17,7 @@ func ServiceRegister(group *gin.RouterGroup) {
 	service := &ServiceController{}
 
 	group.GET("/service_list", service.List)
-	group.GET("/service_delete", service.Delete)
+	group.DELETE("/service_delete", service.Delete)
 	group.GET("/service_detail", service.Detail)
 	group.GET("/service_stat", service.Stat)
 
@@ -104,8 +104,32 @@ func (s *ServiceController) List(ctx *gin.Context) {
 	})
 }
 
+// Delete godoc
+// @Summary 服务删除
+// @Description 服务删除
+// @Tags 服务管理
+// @ID /service/service_delete
+// @Accept  json
+// @Produce  json
+// @Param id query int true "服务id"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_delete [delete]
 func (s *ServiceController) Delete(ctx *gin.Context) {
+	params := &dto.ServiceDeleteInput{}
 
+	if err := params.BindValidParam(ctx); err != nil {
+		middleware.ResponseError(ctx, 2000, err)
+		return
+	}
+
+	serviceInfo := &dao.ServiceInfo{
+		ID:       params.ID,
+		IsDelete: 1,
+	}
+
+	serviceInfo.Update()
+
+	middleware.ResponseSuccess(ctx, "操作成功")
 }
 
 func (s *ServiceController) Detail(ctx *gin.Context) {
