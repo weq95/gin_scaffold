@@ -15,7 +15,7 @@ var (
 )
 
 func main() {
-	lib.InitModule("./conf/dev/")
+	_ = lib.InitModule("./conf/dev/")
 
 	defer lib.Destroy()
 

@@ -41,7 +41,7 @@ func NewServiceManger() *ServiceManger {
 }
 
 func (s *ServiceManger) GetTcpServiceList() []*ServiceDetail {
-	list := []*ServiceDetail{}
+	var list []*ServiceDetail
 
 	for _, item := range s.ServiceSlice {
 		temp := item
@@ -54,7 +54,7 @@ func (s *ServiceManger) GetTcpServiceList() []*ServiceDetail {
 }
 
 func (s *ServiceManger) GetGrpcServiceList() []*ServiceDetail {
-	list := []*ServiceDetail{}
+	var list []*ServiceDetail
 
 	for _, serviceItem := range s.ServiceSlice {
 		temp := serviceItem

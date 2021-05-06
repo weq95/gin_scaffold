@@ -2,8 +2,6 @@ package lib
 
 import (
 	"bytes"
-	"database/sql"
-	"github.com/e421083458/gorm"
 	"github.com/gin_scaffiold/common/log"
 	"github.com/spf13/viper"
 	"io/ioutil"
@@ -69,10 +67,6 @@ type RedisConf struct {
 //全局变量
 var (
 	ConfBase        *BaseConf
-	DBMapPool       map[string]*sql.DB
-	GORMMapPool     map[string]*gorm.DB
-	DBDefaultPool   *sql.DB
-	GORMDefaultPool *gorm.DB
 	ConfRedis       *RedisConf
 	ConfRedisMap    *RedisMapConf
 	ViperConfMap    map[string]*viper.Viper

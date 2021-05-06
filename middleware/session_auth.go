@@ -9,7 +9,7 @@ import (
 func SessionAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
-		if name,ok:=session.Get("user").(string);!ok||name==""{
+		if name, ok := session.Get("user").(string); !ok || name == "" {
 			ResponseError(c, InternalErrorCode, errors.New("user not login 请您先登录"))
 			c.Abort()
 			return

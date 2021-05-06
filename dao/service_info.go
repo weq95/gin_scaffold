@@ -1,6 +1,11 @@
 package dao
 
-import "time"
+import (
+	"github.com/gin_scaffiold/common/lib"
+	"github.com/gin_scaffiold/dto"
+	"sync"
+	"time"
+)
 
 type ServiceInfo struct {
 	ID          int64     `json:"id" gorm:"primary_key"`
@@ -12,6 +17,99 @@ type ServiceInfo struct {
 	IsDelete    int8      `json:"is_delete" gorm:"column:is_delete" description:"是否已删除；0：否；1：是"`
 }
 
+var (
+	wg sync.WaitGroup
+)
+
 func (t *ServiceInfo) TableName() string {
 	return "gateway_service_info"
+}
+
+func (m *ServiceInfo) PageList(input *dto.ServiceListInput) ([]*ServiceInfo, int64) {
+	var (
+		total int64                     //总条数
+		list  = make([]*ServiceInfo, 0) //列表
+	)
+
+	query := lib.DBMySQL.Model(m).Debug().Where("is_delete = 0")
+
+	if input.Info != "" {
+		query.Where("(service_name LIKE ? or service_desc LIKE ?)", "%"+input.Info+"%", "%"+input.Info+"%")
+	}
+
+	query.Count(&total)
+	query.Limit(input.PageSize).Offset((input.PageNo - 1) * input.PageSize).Find(&list)
+
+	return list, total
+}
+
+func (m *ServiceInfo) Find(search *ServiceInfo) *ServiceInfo {
+
+	lib.DBMySQL.Where(search).Find(m)
+
+	return m
+}
+
+func (m *ServiceInfo) Detail(search *ServiceInfo) *ServiceDetail {
+	httpRule := &HttpRule{
+		ServiceID: search.ID,
+	}
+
+	tcpRule := &TcpRule{
+		ServiceID: search.ID,
+	}
+
+	grpcRule := &GrpcRule{
+		ServiceID: search.ID,
+	}
+
+	accessControl := &AccessControl{
+		ServiceID: search.ID,
+	}
+
+	loadBalance := &LoadBalance{
+		ServiceID: search.ID,
+	}
+
+	wg.Add(5)
+
+	go func() {
+		defer wg.Done()
+		lib.DBMySQL /*.Model(new(HttpRule))*/ .Find(httpRule)
+	}()
+
+	go func() {
+		defer wg.Done()
+		lib.DBMySQL /*.Model(new(HttpRule))*/ .Find(tcpRule)
+	}()
+
+	go func() {
+		defer wg.Done()
+		lib.DBMySQL /*.Model(new(HttpRule))*/ .Find(grpcRule)
+	}()
+
+	go func() {
+		defer wg.Done()
+		lib.DBMySQL /*.Model(new(HttpRule))*/ .Find(accessControl)
+	}()
+
+	go func() {
+		defer wg.Done()
+		lib.DBMySQL /*.Model(new(HttpRule))*/ .Find(loadBalance)
+	}()
+
+	wg.Wait()
+
+	return &ServiceDetail{
+		Info:          search,
+		HTTPRule:      httpRule,
+		TCPRule:       tcpRule,
+		GRPCRule:      grpcRule,
+		LoadBalance:   loadBalance,
+		AccessControl: accessControl,
+	}
+}
+
+func (m *ServiceInfo) Save() {
+	lib.DBMySQL.Save(m)
 }

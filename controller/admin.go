@@ -72,7 +72,11 @@ func (a *AdminController) Login(ctx *gin.Context) {
 
 	sess := sessions.Default(ctx)
 	sess.Set(public.AdminSessionInfoKey, string(sessBts))
-	_ = sess.Save()
+	err = sess.Save()
+	if err != nil {
+		middleware.ResponseError(ctx, 2004, err)
+		return
+	}
 
 	out := &dto.AdminLoginOutput{
 		Token: admin.UserName,
