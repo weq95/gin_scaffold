@@ -140,6 +140,16 @@ func (s *ServiceController) Stat(ctx *gin.Context) {
 
 }
 
+// ServiceAddHTTP godoc
+// @Summary 添加HTTP服务
+// @Description 添加HTTP服务
+// @Tags 服务管理
+// @ID /service/service_add_http
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceAddHTTPInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_add_http [post]
 func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 
 }
