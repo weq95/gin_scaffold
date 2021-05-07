@@ -43,6 +43,13 @@ func (m *ServiceInfo) PageList(input *dto.ServiceListInput) ([]*ServiceInfo, int
 	return list, total
 }
 
+func (m *ServiceInfo) FindByWhere() *ServiceInfo {
+
+	lib.DBMySQL.Where(m).First(m)
+
+	return m
+}
+
 func (m *ServiceInfo) Find(search *ServiceInfo) *ServiceInfo {
 
 	lib.DBMySQL.Where(search).Find(m)

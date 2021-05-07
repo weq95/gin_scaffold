@@ -1,5 +1,7 @@
 package dao
 
+import "github.com/gin_scaffiold/common/lib"
+
 type AccessControl struct {
 	ID                int64  `json:"id" gorm:"primary_key"`
 	ServiceID         int64  `json:"service_id" gorm:"column:service_id" description:"服务id"`
@@ -13,4 +15,8 @@ type AccessControl struct {
 
 func (t *AccessControl) TableName() string {
 	return "gateway_service_access_control"
+}
+
+func (m *AccessControl) Update() {
+	lib.DBMySQL.Debug().Model(m).Updates(*m)
 }

@@ -1,5 +1,7 @@
 package dao
 
+import "github.com/gin_scaffiold/common/lib"
+
 type HttpRule struct {
 	ID             int64  `json:"id" gorm:"primary_key"`
 	ServiceID      int64  `json:"service_id" gorm:"column:service_id" description:"服务id"`
@@ -14,4 +16,15 @@ type HttpRule struct {
 
 func (t *HttpRule) TableName() string {
 	return "gateway_service_http_rule"
+}
+
+func (m *HttpRule) Update() {
+	lib.DBMySQL.Debug().Model(m).Updates(*m)
+}
+
+func (m *HttpRule) FindByWhere() *HttpRule {
+
+	lib.DBMySQL.Where(m).First(m)
+
+	return m
 }

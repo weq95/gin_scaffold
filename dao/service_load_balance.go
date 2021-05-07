@@ -1,6 +1,9 @@
 package dao
 
-import "strings"
+import (
+	"github.com/gin_scaffiold/common/lib"
+	"strings"
+)
 
 type LoadBalance struct {
 	ID            int64  `json:"id" gorm:"primary_key"`
@@ -25,4 +28,8 @@ func (t *LoadBalance) TableName() string {
 
 func (m *LoadBalance) GetIPListModel() []string {
 	return strings.Split(m.IpList, ",")
+}
+
+func (m *LoadBalance) Update() {
+	lib.DBMySQL.Debug().Model(m).Updates(*m)
 }
