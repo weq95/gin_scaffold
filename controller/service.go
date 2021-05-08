@@ -129,7 +129,7 @@ func (s *ServiceController) Delete(ctx *gin.Context) {
 		IsDelete: 1,
 	}
 
-	serviceInfo.Update()
+	_ = serviceInfo.Update()
 
 	middleware.ResponseSuccess(ctx, "操作成功")
 }
@@ -186,7 +186,10 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			ServiceName: params.ServiceName,
 			ServiceDesc: params.ServiceDesc,
 		}
-		serviceModel.Update()
+		err := serviceModel.Update()
+		if err != nil {
+			return err
+		}
 
 		httpRule := &dao.HttpRule{
 			ServiceID:      serviceModel.ID,
@@ -198,7 +201,10 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			UrlRewrite:     params.UrlRewrite,
 			HeaderTransfor: params.HeaderTransfor,
 		}
-		httpRule.Update()
+		err = httpRule.Update()
+		if err != nil {
+			return err
+		}
 
 		accessControl := &dao.AccessControl{
 			ServiceID:         serviceModel.ID,
@@ -208,7 +214,10 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			ClientIPFlowLimit: params.ClientipFlowLimit,
 			ServiceFlowLimit:  params.ServiceFlowLimit,
 		}
-		accessControl.Update()
+		err = accessControl.Update()
+		if err != nil {
+			return err
+		}
 
 		loadbalance := &dao.LoadBalance{
 			ServiceID:              serviceModel.ID,
@@ -220,7 +229,10 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			UpstreamIdleTimeout:    params.UpstreamIdleTimeout,
 			UpstreamMaxIdle:        params.UpstreamMaxIdle,
 		}
-		loadbalance.Update()
+		err = loadbalance.Update()
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})

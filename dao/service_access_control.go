@@ -17,6 +17,6 @@ func (t *AccessControl) TableName() string {
 	return "gateway_service_access_control"
 }
 
-func (m *AccessControl) Update() {
-	lib.DBMySQL.Debug().Model(m).Updates(*m)
+func (m *AccessControl) Update() error{
+	return lib.DBMySQL.Debug().Model(m).Updates(*m).Error
 }

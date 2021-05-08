@@ -117,14 +117,14 @@ func (m *ServiceInfo) Detail(search *ServiceInfo) *ServiceDetail {
 	}
 }
 
-func (m *ServiceInfo) Save() {
-	lib.DBMySQL.Save(m)
+func (m *ServiceInfo) Save() error {
+	return lib.DBMySQL.Save(m).Error
 }
 
-func (m *ServiceInfo) Update() {
-	lib.DBMySQL.Debug().Model(m).Updates(*m)
+func (m *ServiceInfo) Update() error {
+	return lib.DBMySQL.Debug().Model(m).Updates(*m).Error
 }
 
-func (m *ServiceInfo) Delete() {
-	lib.DBMySQL.Delete(m)
+func (m *ServiceInfo) Delete() error {
+	return lib.DBMySQL.Delete(m).Error
 }

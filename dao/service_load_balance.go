@@ -30,6 +30,6 @@ func (m *LoadBalance) GetIPListModel() []string {
 	return strings.Split(m.IpList, ",")
 }
 
-func (m *LoadBalance) Update() {
-	lib.DBMySQL.Debug().Model(m).Updates(*m)
+func (m *LoadBalance) Update() error {
+	return lib.DBMySQL.Debug().Model(m).Updates(*m).Error
 }
