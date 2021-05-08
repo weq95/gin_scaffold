@@ -186,7 +186,7 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			ServiceName: params.ServiceName,
 			ServiceDesc: params.ServiceDesc,
 		}
-		err := serviceModel.Update()
+		err := serviceModel.Save()
 		if err != nil {
 			return err
 		}
@@ -201,7 +201,7 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			UrlRewrite:     params.UrlRewrite,
 			HeaderTransfor: params.HeaderTransfor,
 		}
-		err = httpRule.Update()
+		err = httpRule.Save()
 		if err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			ClientIPFlowLimit: params.ClientipFlowLimit,
 			ServiceFlowLimit:  params.ServiceFlowLimit,
 		}
-		err = accessControl.Update()
+		err = accessControl.Save()
 		if err != nil {
 			return err
 		}
@@ -229,7 +229,7 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 			UpstreamIdleTimeout:    params.UpstreamIdleTimeout,
 			UpstreamMaxIdle:        params.UpstreamMaxIdle,
 		}
-		err = loadbalance.Update()
+		err = loadbalance.Save()
 		if err != nil {
 			return err
 		}

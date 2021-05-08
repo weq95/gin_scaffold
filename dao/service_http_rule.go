@@ -18,6 +18,10 @@ func (t *HttpRule) TableName() string {
 	return "gateway_service_http_rule"
 }
 
+func (m *HttpRule) Save() error {
+	return lib.DBMySQL.Save(m).Error
+}
+
 func (m *HttpRule) Update() error{
 	return lib.DBMySQL.Debug().Model(m).Updates(*m).Error
 }
