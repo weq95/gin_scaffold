@@ -411,18 +411,394 @@ func (s *ServiceController) UpdateHTTP(ctx *gin.Context) {
 	middleware.ResponseSuccess(ctx, "")
 }
 
+// AddTcp godoc
+// @Summary tcp服务添加
+// @Description tcp服务添加
+// @Tags 服务管理
+// @ID /service/service_add_tcp
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceAddTcpInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_add_tcp [post]
 func (s *ServiceController) AddTcp(ctx *gin.Context) {
+	params := &dto.ServiceAddTcpInput{}
+	if err := params.GetValidParams(ctx); err != nil {
+		middleware.ResponseError(ctx, 2001, err)
+		return
+	}
 
+	//验证ip与权限数量是否一致
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(ctx, 2005, errors.New("ip列表与权重设置不匹配"))
+		return
+	}
+
+	//验证服务名称是否已存在
+	infoSearch := &dao.ServiceInfo{
+		ServiceName: params.ServiceName,
+		IsDelete:    0,
+	}
+	infoSearch.Find(infoSearch)
+	if infoSearch.ID <= 0 {
+		middleware.ResponseError(ctx, 2002, errors.New("服务名称已存在"))
+		return
+	}
+
+	//验证端口是否被占用
+	tcpRuleSearch := &dao.TcpRule{
+		Port: params.Port,
+	}
+	tcpRuleSearch.Find(tcpRuleSearch)
+	if tcpRuleSearch.ID <= 0 {
+		middleware.ResponseError(ctx, 2004, errors.New("服务端口已被占用"))
+		return
+	}
+
+	err := lib.DBMySQL.Transaction(func(tx *gorm.DB) error {
+		//添加TCP服务
+		info := &dao.ServiceInfo{
+			LoadType:    public.LoadTypeTCP,
+			ServiceName: params.ServiceName,
+			ServiceDesc: params.ServiceDesc,
+		}
+		err := info.Save()
+		if err != nil {
+			return err
+		}
+
+		//提娜佳负载均衡规则
+		loadBalance := &dao.LoadBalance{
+			ServiceID:  info.ID,
+			RoundType:  params.RoundType,
+			IpList:     params.IpList,
+			WeightList: params.WeightList,
+			ForbidList: params.ForbidList,
+		}
+		err = loadBalance.Save()
+		if err != nil {
+			return err
+		}
+
+		//添加TCP规则
+		httpRule := &dao.TcpRule{
+			ServiceID: info.ID,
+			Port:      params.Port,
+		}
+		err = httpRule.Save()
+		if err != nil {
+			return err
+		}
+
+		//添加权限
+		accessControl := &dao.AccessControl{
+			ServiceID:         info.ID,
+			OpenAuth:          params.OpenAuth,
+			BlackList:         params.BlackList,
+			WhiteList:         params.WhiteList,
+			WhiteHostName:     params.WhiteHostName,
+			ClientIPFlowLimit: params.ClientIPFlowLimit,
+			ServiceFlowLimit:  params.ServiceFlowLimit,
+		}
+		err = accessControl.Save()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		middleware.ResponseError(ctx, 2000, err)
+		return
+	}
+
+	middleware.ResponseSuccess(ctx, "")
 }
 
+// UpdateTcp godoc
+// @Summary tcp服务更新
+// @Description tcp服务更新
+// @Tags 服务管理
+// @ID /service/service_update_tcp
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceUpdateTcpInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_update_tcp [post]
 func (s *ServiceController) UpdateTcp(ctx *gin.Context) {
+	params := &dto.ServiceUpdateTcpInput{}
+	if err := params.GetValidParams(ctx); err != nil {
+		middleware.ResponseError(ctx, 2001, err)
+		return
+	}
 
+	//ip与权重数量一致
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(ctx, 2002, errors.New("ip列表与权重列表不一致"))
+		return
+	}
+
+	service := &dao.ServiceInfo{
+		ID: params.ID,
+	}
+	detail := service.Detail(service)
+
+	err := lib.DBMySQL.Transaction(func(tx *gorm.DB) error {
+		info := detail.Info
+		info.ServiceDesc = params.ServiceDesc
+		err := info.Update()
+		if err != nil {
+			return err
+		}
+
+		loadBalance := &dao.LoadBalance{}
+		if detail.LoadBalance != nil {
+			loadBalance = detail.LoadBalance
+		}
+		loadBalance.ServiceID = info.ID
+		loadBalance.RoundType = params.RoundType
+		loadBalance.IpList = params.IpList
+		loadBalance.WeightList = params.WeightList
+		loadBalance.ForbidList = params.ForbidList
+		err = loadBalance.Save()
+		if err != nil {
+			return err
+		}
+
+		tcpRule := &dao.TcpRule{}
+		if detail.TCPRule != nil {
+			tcpRule = detail.TCPRule
+		}
+		tcpRule.ServiceID = info.ID
+		tcpRule.Port = params.Port
+		err = tcpRule.Save()
+		if err != nil {
+			return err
+		}
+
+		accessControl := &dao.AccessControl{}
+		if detail.AccessControl != nil {
+			accessControl = detail.AccessControl
+		}
+		accessControl.ServiceID = info.ID
+		accessControl.OpenAuth = params.OpenAuth
+		accessControl.BlackList = params.BlackList
+		accessControl.WhiteList = params.WhiteList
+		accessControl.WhiteHostName = params.WhiteHostName
+		accessControl.ClientIPFlowLimit = params.ClientIPFlowLimit
+		accessControl.ServiceFlowLimit = params.ServiceFlowLimit
+		err = accessControl.Save()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		middleware.ResponseError(ctx, 2000, err)
+		return
+	}
+
+	middleware.ResponseSuccess(ctx, "")
 }
 
+// AddGrpc godoc
+// @Summary grpc服务添加
+// @Description grpc服务添加
+// @Tags 服务管理
+// @ID /service/service_add_grpc
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceAddGrpcInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_add_grpc [post]
 func (s *ServiceController) AddGrpc(ctx *gin.Context) {
+	params := &dto.ServiceAddGrpcInput{}
+	if err := params.GetValidParams(ctx); err != nil {
+		middleware.ResponseError(ctx, 2001, err)
+		return
+	}
 
+	//ip与权重数量一致
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(ctx, 2005, errors.New("ip列表与权重设置不匹配"))
+		return
+	}
+
+	//验证服务名称是否已被占用
+	infoSearch := &dao.ServiceInfo{
+		ServiceName: params.ServiceName,
+		IsDelete:    0,
+	}
+	infoSearch.Find(infoSearch)
+	if infoSearch.ID > 0 {
+		middleware.ResponseError(ctx, 2002, errors.New("服务名称已存在"))
+		return
+	}
+
+	//验证端口是否已被占用
+	tcpRuleSearch := &dao.TcpRule{
+		Port: params.Port,
+	}
+	tcpRuleSearch.Find(tcpRuleSearch)
+	if tcpRuleSearch.ID > 0 {
+		middleware.ResponseError(ctx, 2003, errors.New("服务端口已被占用"))
+		return
+	}
+
+	grpcRuleSearch := &dao.GrpcRule{
+		Port: params.Port,
+	}
+	grpcRuleSearch.Find(grpcRuleSearch)
+	if grpcRuleSearch.ID > 0 {
+		middleware.ResponseError(ctx, 2004, errors.New("服务端口已被占用"))
+		return
+	}
+
+	err := lib.DBMySQL.Transaction(func(tx *gorm.DB) error {
+		info := dao.ServiceInfo{
+			LoadType:    public.LoadTypeGRPC,
+			ServiceName: params.ServiceName,
+			ServiceDesc: params.ServiceDesc,
+		}
+		err := info.Save()
+		if err != nil {
+			return err
+		}
+
+		loadBalance := &dao.LoadBalance{
+			ServiceID:  info.ID,
+			RoundType:  params.RoundType,
+			IpList:     params.IpList,
+			WeightList: params.WeightList,
+			ForbidList: params.ForbidList,
+		}
+		err = loadBalance.Save()
+		if err != nil {
+			return err
+		}
+
+		grpcRule := dao.GrpcRule{
+			ServiceID:      info.ID,
+			Port:           params.Port,
+			HeaderTransfor: params.HeaderTransfor,
+		}
+		err = grpcRule.Save()
+		if err != nil {
+			return err
+		}
+
+		accessControl := &dao.AccessControl{
+			ServiceID:         info.ID,
+			OpenAuth:          params.OpenAuth,
+			BlackList:         params.BlackList,
+			WhiteList:         params.WhiteList,
+			WhiteHostName:     params.WhiteHostName,
+			ClientIPFlowLimit: params.ClientIPFlowLimit,
+			ServiceFlowLimit:  params.ServiceFlowLimit,
+		}
+		err = accessControl.Save()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		middleware.ResponseError(ctx, 2009, err)
+		return
+	}
+
+	middleware.ResponseSuccess(ctx, "")
 }
 
+// UpdateGrpc godoc
+// @Summary grpc服务更新
+// @Description grpc服务更新
+// @Tags 服务管理
+// @ID /service/service_update_grpc
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceUpdateGrpcInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_update_grpc [post]
 func (s *ServiceController) UpdateGrpc(ctx *gin.Context) {
+	params := &dto.ServiceUpdateGrpcInput{}
+	if err := params.GetValidParams(ctx); err != nil {
+		middleware.ResponseError(ctx, 2001, err)
+		return
+	}
 
+	//ip与权重数量一致
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(ctx, 2002, errors.New("ip列表与权重设置不匹配"))
+		return
+	}
+
+	service := &dao.ServiceInfo{
+		ID: params.ID,
+	}
+	detail := service.Detail(service)
+
+	err := lib.DBMySQL.Transaction(func(tx *gorm.DB) error {
+		info := detail.Info
+		info.ServiceDesc = params.ServiceDesc
+		err := info.Save()
+		if err != nil {
+			return err
+		}
+
+		loadBalance := &dao.LoadBalance{}
+		if detail.LoadBalance != nil {
+			loadBalance = detail.LoadBalance
+		}
+		loadBalance.ServiceID = info.ID
+		loadBalance.RoundType = params.RoundType
+		loadBalance.IpList = params.IpList
+		loadBalance.WeightList = params.WeightList
+		loadBalance.ForbidList = params.ForbidList
+		err = loadBalance.Save()
+		if err != nil {
+			return err
+		}
+
+		grpcRule := &dao.GrpcRule{}
+		if detail.GRPCRule != nil {
+			grpcRule = detail.GRPCRule
+		}
+		grpcRule.ServiceID = info.ID
+		grpcRule.HeaderTransfor = params.HeaderTransfor
+		err = grpcRule.Save()
+		if err != nil {
+			return err
+		}
+
+		accessControl := &dao.AccessControl{}
+		if detail.AccessControl != nil {
+			accessControl = detail.AccessControl
+		}
+		accessControl.ServiceID = info.ID
+		accessControl.OpenAuth = params.OpenAuth
+		accessControl.BlackList = params.BlackList
+		accessControl.WhiteList = params.WhiteList
+		accessControl.WhiteHostName = params.WhiteHostName
+		accessControl.ClientIPFlowLimit = params.ClientIPFlowLimit
+		accessControl.ServiceFlowLimit = params.ServiceFlowLimit
+		err = accessControl.Save()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		middleware.ResponseError(ctx, 2008, err)
+		return
+	}
+
+	middleware.ResponseSuccess(ctx, "")
 }

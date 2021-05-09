@@ -1,5 +1,7 @@
 package dao
 
+import "github.com/gin_scaffiold/common/lib"
+
 type GrpcRule struct {
 	ID             int64  `json:"id" gorm:"primary_key"`
 	ServiceID      int64  `json:"service_id" gorm:"column:service_id" description:"服务id	"`
@@ -9,4 +11,15 @@ type GrpcRule struct {
 
 func (t *GrpcRule) TableName() string {
 	return "gateway_service_grpc_rule"
+}
+
+func (m *GrpcRule) Find(search *GrpcRule) *GrpcRule {
+
+	lib.DBMySQL.Where(search).Find(m)
+
+	return m
+}
+
+func (m *GrpcRule) Save() error {
+	return lib.DBMySQL.Save(m).Error
 }
