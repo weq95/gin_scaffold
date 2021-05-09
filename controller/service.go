@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ServiceController struct {
@@ -165,8 +166,59 @@ func (s *ServiceController) Detail(ctx *gin.Context) {
 
 }
 
+// ServiceStat godoc
+// @Summary 服务统计
+// @Description 服务统计
+// @Tags 服务管理
+// @ID /service/service_stat
+// @Accept  json
+// @Produce  json
+// @Param id query string true "服务ID"
+// @Success 200 {object} middleware.Response{data=dto.ServiceStatOutput} "success"
+// @Router /service/service_stat [get]
 func (s *ServiceController) Stat(ctx *gin.Context) {
+	params := &dto.ServiceDeleteInput{}
+	if err := params.BindValidParam(ctx); err != nil {
+		middleware.ResponseError(ctx, 2000, err)
+		return
+	}
 
+	//基本信息
+	serviceInfo := &dao.ServiceInfo{ID: params.ID}
+	detail := serviceInfo.Detail(serviceInfo)
+	if serviceInfo.ID <= 0 {
+		middleware.ResponseError(ctx, 2004, errors.New("未获取到详情"))
+		return
+	}
+
+	counter, err := public.FlowCounterHandler.GetCounter(public.FlowServicePrefix + detail.Info.ServiceName)
+	if err != nil {
+		middleware.ResponseError(ctx, 2004, err)
+		return
+	}
+
+	//今天的数据详情
+	todayList := []int64{}
+	nowTime := time.Now()
+	for i := 0; i < nowTime.Hour(); i++ {
+		dateTime := time.Date(nowTime.Year(), nowTime.Month(), nowTime.Day(), i, 0, 0, 0, lib.TimeLocaltion)
+		hourDate, _ := counter.GetHourData(dateTime)
+		todayList = append(todayList, hourDate)
+	}
+
+	//昨天的数据详情
+	yesterdayList := []int64{}
+	yesterTime := nowTime.Add(-1 * time.Duration(time.Hour*24))
+	for i := 0; i < 23; i++ {
+		dateTime := time.Date(yesterTime.Year(), yesterTime.Month(), yesterTime.Day(), i, 0, 0, 0, lib.TimeLocaltion)
+		hourData, _ := counter.GetHourData(dateTime)
+		yesterdayList = append(yesterdayList, hourData)
+	}
+
+	middleware.ResponseSuccess(ctx, &dto.ServiceStatOutput{
+		Today:     todayList,
+		Yesterday: yesterdayList,
+	})
 }
 
 // ServiceAddHTTP godoc
