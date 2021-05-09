@@ -10,6 +10,7 @@ import (
 	"github.com/gin_scaffiold/public"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 )
 
 type ServiceController struct {
@@ -134,7 +135,33 @@ func (s *ServiceController) Delete(ctx *gin.Context) {
 	middleware.ResponseSuccess(ctx, "操作成功")
 }
 
+// ServiceDetail godoc
+// @Summary 服务详情
+// @Description 服务详情
+// @Tags 服务管理
+// @ID /service/service_detail
+// @Accept  json
+// @Produce  json
+// @Param id query string true "服务ID"
+// @Success 200 {object} middleware.Response{data=dao.ServiceDetail} "success"
+// @Router /service/service_detail [get]
 func (s *ServiceController) Detail(ctx *gin.Context) {
+	params := &dto.ServiceDeleteInput{}
+	if err := params.BindValidParam(ctx); err != nil {
+		middleware.ResponseError(ctx, 2000, err)
+		return
+	}
+
+	//基本信息
+	serviceInfo := &dao.ServiceInfo{ID: params.ID}
+	serviceInfo = serviceInfo.Find(serviceInfo)
+	if serviceInfo.ID <= 0 {
+		middleware.ResponseError(ctx, 2003, errors.New("未获取到详情信息"))
+		return
+	}
+
+	detail := serviceInfo.Detail(serviceInfo)
+	middleware.ResponseSuccess(ctx, detail)
 
 }
 
@@ -240,8 +267,96 @@ func (s *ServiceController) AddHTTP(ctx *gin.Context) {
 	middleware.ResponseSuccess(ctx, "")
 }
 
+// UpdateHTTP godoc
+// @Summary 修改HTTP服务
+// @Description 修改HTTP服务
+// @Tags 服务管理
+// @ID /service/service_update_http
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceUpdateHTTPInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_update_http [post]
 func (s *ServiceController) UpdateHTTP(ctx *gin.Context) {
+	params := &dto.ServiceUpdateHTTPInput{}
+	if err := params.BindValidParam(ctx); err != nil {
+		middleware.ResponseError(ctx, 2000, err)
+		return
+	}
 
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(ctx, 2001, errors.New("IP列表与权重列表数量不一致"))
+		return
+	}
+
+	serviceInfo := &dao.ServiceInfo{ServiceName: params.ServiceName}
+	serviceInfo.Find(serviceInfo)
+	if serviceInfo.ID <= 0 {
+		middleware.ResponseError(ctx, 2003, errors.New("服务不存在"))
+		return
+	}
+
+	detail := serviceInfo.Detail(serviceInfo)
+	if serviceInfo.ID <= 0 {
+		middleware.ResponseError(ctx, 2004, errors.New("服务详情异常"))
+		return
+	}
+
+	_ = lib.DBMySQL.Transaction(func(tx *gorm.DB) error {
+		//更新服务信息
+		info := detail.Info
+		info.ServiceDesc = params.ServiceDesc
+		err := info.Update()
+		if err != nil {
+			middleware.ResponseError(ctx, 2005, err)
+			return err
+		}
+
+		//更新http服务规则
+		httpRule := detail.HTTPRule
+		httpRule.NeedHttps = params.NeedHttps
+		httpRule.NeedStripUri = params.NeedStripUri
+		httpRule.NeedWebsocket = params.NeedWebsocket
+		httpRule.UrlRewrite = params.UrlRewrite
+		httpRule.HeaderTransfor = params.HeaderTransfor
+		err = httpRule.Update()
+		if err != nil {
+			middleware.ResponseError(ctx, 2006, err)
+			return err
+		}
+
+		//更新权限
+		accessControl := detail.AccessControl
+		accessControl.OpenAuth = params.OpenAuth
+		accessControl.BlackList = params.BlackList
+		accessControl.WhiteList = params.WhiteList
+		accessControl.ClientIPFlowLimit = params.ClientipFlowLimit
+		accessControl.ServiceFlowLimit = params.ServiceFlowLimit
+		err = accessControl.Update()
+		if err != nil {
+			middleware.ResponseError(ctx, 2007, err)
+			return err
+		}
+
+		//更新负载均衡规则
+		loadbalance := detail.LoadBalance
+		loadbalance.RoundType = params.RoundType
+		loadbalance.IpList = params.IpList
+		loadbalance.WeightList = params.WeightList
+		loadbalance.UpstreamConnectTimeout = params.UpstreamConnectTimeout
+		loadbalance.UpstreamHeaderTimeout = params.UpstreamHeaderTimeout
+		loadbalance.UpstreamIdleTimeout = params.UpstreamIdleTimeout
+		loadbalance.UpstreamMaxIdle = params.UpstreamMaxIdle
+		err = loadbalance.Update()
+		if err != nil {
+			middleware.ResponseError(ctx, 2008, err)
+			return err
+		}
+
+		return nil
+	})
+
+	middleware.ResponseSuccess(ctx, "")
 }
 
 func (s *ServiceController) AddTcp(ctx *gin.Context) {

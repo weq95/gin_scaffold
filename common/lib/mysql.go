@@ -1,8 +1,8 @@
 package lib
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var DBMySQL  *gorm.DB
