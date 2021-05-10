@@ -128,3 +128,14 @@ func (m *ServiceInfo) Update() error {
 func (m *ServiceInfo) Delete() error {
 	return lib.DBMySQL.Delete(m).Error
 }
+
+func (m *ServiceInfo) GroupByLoadType() ([]*dto.DashServiceStatItemOutput, error) {
+	list := []*dto.DashServiceStatItemOutput{}
+
+	err := lib.DBMySQL.Model(m).Where("is_delete=0").
+		Select("load_type, count(*) as value").
+		Group("load_type").
+		Scan(&list).Error
+
+	return list, err
+}

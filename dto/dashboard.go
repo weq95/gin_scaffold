@@ -14,6 +14,6 @@ type DashServiceStatItemOutput struct {
 }
 
 type DashServiceStatOutput struct {
-	Legend []string                    `json:"legend"`
-	Data   []DashServiceStatItemOutput `json:"data"`
+	Legend []string                     `json:"legend"`
+	Data   []*DashServiceStatItemOutput `json:"data"`
 }

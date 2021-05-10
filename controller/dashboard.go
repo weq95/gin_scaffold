@@ -75,7 +75,29 @@ func (c DashboardController) PanelGroupData(ctx *gin.Context) {
 // @Success 200 {object} middleware.Response{data=dto.DashServiceStatOutput} "success"
 // @Router /dashboard/service_stat [get]
 func (c DashboardController) FlowStat(ctx *gin.Context) {
+	serviceInfo := &dao.ServiceInfo{}
+	list, err := serviceInfo.GroupByLoadType()
+	if err != nil {
+		middleware.ResponseError(ctx, 2002, err)
+		return
+	}
 
+	legend := []string{}
+	for i, item := range list {
+		name, ok := public.LoadTypeMap[item.LoadType]
+		if !ok {
+			middleware.ResponseError(ctx, 2003, errors.New("load_type not found"))
+			return
+		}
+
+		list[i].Name = name
+		legend = append(legend, name)
+	}
+
+	middleware.ResponseSuccess(ctx, &dto.DashServiceStatOutput{
+		Legend: legend,
+		Data:   list,
+	})
 }
 
 // FlowStat godoc
