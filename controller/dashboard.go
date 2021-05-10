@@ -3,10 +3,12 @@ package controller
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin_scaffiold/common/lib"
 	"github.com/gin_scaffiold/dao"
 	"github.com/gin_scaffiold/dto"
 	"github.com/gin_scaffiold/middleware"
 	"github.com/gin_scaffiold/public"
+	"time"
 )
 
 type DashboardController struct {
@@ -110,5 +112,30 @@ func (c DashboardController) FlowStat(ctx *gin.Context) {
 // @Success 200 {object} middleware.Response{data=dto.ServiceStatOutput} "success"
 // @Router /dashboard/flow_stat [get]
 func (c DashboardController) ServiceStat(ctx *gin.Context) {
+	counter, err := public.FlowCounterHandler.GetCounter(public.FlowTotal)
+	if err != nil {
+		middleware.ResponseError(ctx, 2001, err)
+		return
+	}
 
+	todayList := []int64{}
+	currentTime := time.Now()
+	for i := 0; i < currentTime.Hour(); i++ {
+		dateTime := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), i, 0, 0, 0, lib.TimeLocaltion)
+		hourData, _ := counter.GetHourData(dateTime)
+		todayList = append(todayList, hourData)
+	}
+
+	yesterdayList := []int64{}
+	yesterTime := currentTime.Add(-1 * time.Hour * 24)
+	for i := 0; i <= 23; i++ {
+		dateTime := time.Date(yesterTime.Year(), yesterTime.Month(), yesterTime.Hour(), i, 0, 0, 0, lib.TimeLocaltion)
+		hourData, _ := counter.GetHourData(dateTime)
+		yesterdayList = append(yesterdayList, hourData)
+	}
+
+	middleware.ResponseSuccess(ctx, &dto.ServiceStatOutput{
+		Today:     todayList,
+		Yesterday: yesterdayList,
+	})
 }
