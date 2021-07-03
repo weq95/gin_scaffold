@@ -3,9 +3,11 @@ package public
 import (
 	"crypto/md5"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
+	"github.com/fatih/structs"
 	"io"
+	"reflect"
+	"strings"
 )
 
 func GenSaltPassword(salt, password string) string {
@@ -29,9 +31,8 @@ func MD5(s string) string {
 }
 
 func Obj2Json(s interface{}) string {
-	bts, _ := json.Marshal(s)
 
-	return string(bts)
+	return string(JSONMarshalToString(s))
 }
 
 func InStringSlice(slice []string, str string) bool {
@@ -42,4 +43,26 @@ func InStringSlice(slice []string, str string) bool {
 	}
 
 	return false
+}
+
+// Trim 去除空格
+func Trim(s string) string {
+	return strings.TrimSpace(s)
+}
+
+// StructsToMapSlice 将结构体切片转换为字典切片
+func StructsToMapSlice(v interface{}) []map[string]interface{} {
+	iVal := reflect.Indirect(reflect.ValueOf(v))
+
+	if iVal.IsNil() || iVal.IsValid() || iVal.Type().Kind() != reflect.Slice {
+		return make([]map[string]interface{}, 0)
+	}
+
+	l := iVal.Len()
+	result := make([]map[string]interface{}, 1)
+	for i := 0; i < l; i++ {
+		result[i] = structs.Map(iVal.Index(i).Interface())
+	}
+
+	return result
 }
