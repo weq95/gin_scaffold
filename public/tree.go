@@ -359,15 +359,15 @@ var tree = `[
   ]`
 
 type Category struct {
-	Id       string      `json:"id"`
-	Level    string      `json:"level"`
-	Pid      string      `json:"pid"`
-	Name     string      `json:"name"`
-	Icon     string      `json:"icon"`
-	Ctime    string      `json:"ctime"`
-	UpTime   string      `json:"up_time"`
-	Sort     string      `json:"sort"`
-	Children []*Category `json:"children"`
+	Id       string `json:"id"`
+	Level    string `json:"level"`
+	Pid      string `json:"pid"`
+	Name     string `json:"name"`
+	Icon     string `json:"icon"`
+	Ctime    string `json:"ctime"`
+	UpTime   string `json:"up_time"`
+	Sort     string `json:"sort"`
+	Children Trees  `json:"children"`
 }
 
 type Trees []*Category
