@@ -1,0 +1,6 @@
+.idea/.gitignore
+.idea/gin_scaffold.iml
+.idea/modules.xml
+.idea/vcs.xml
+logs/gin_scaffold.inf.log
+logs/gin_scaffold.wf.log
