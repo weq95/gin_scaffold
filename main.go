@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/gin_scaffiold/common/lib"
 	"github.com/gin_scaffiold/router"
 	"github.com/skip2/go-qrcode"
@@ -18,17 +19,44 @@ var (
 )
 
 func main() {
-	_ = lib.InitModule("./conf/dev/")
+	flag.Parse()
+	if *endpoint == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
 
-	defer lib.Destroy()
+	if *config == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
 
-	router.HttpServerRun()
+	if *endpoint == "dashboard" {
+		_ = lib.InitModule("./conf/dev/")
 
-	quit := make(chan os.Signal)
-	signal.Notify(quit, syscall.SIGKILL, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+		defer lib.Destroy()
 
-	router.HttpServerStop()
+		router.HttpServerRun()
+
+		quit := make(chan os.Signal)
+		signal.Notify(quit, syscall.SIGKILL, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+
+		router.HttpServerStop()
+	} else {
+		_ = lib.InitModule("./conf/dev/")
+
+		defer lib.Destroy()
+
+		router.HttpServerRun()
+
+		fmt.Println("start Server:代理服务器已启动")
+		//todo 添加代理服务器
+
+		quit := make(chan os.Signal)
+		signal.Notify(quit, syscall.SIGKILL, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+	}
+
 }
 
 func init() {

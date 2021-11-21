@@ -1,6 +1,6 @@
 module github.com/gin_scaffiold
 
-go 1.14
+go 1.16
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -35,6 +35,7 @@ require (
 	golang.org/x/net v0.0.0-20210427231257-85d9c07bbe3a // indirect
 	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887 // indirect
 	golang.org/x/tools v0.1.0 // indirect
+	google.golang.org/grpc v1.40.0 // indirect
 	gopkg.in/go-playground/validator.v9 v9.29.0
 	gorm.io/driver/mysql v1.0.6
 	gorm.io/gorm v1.21.9
